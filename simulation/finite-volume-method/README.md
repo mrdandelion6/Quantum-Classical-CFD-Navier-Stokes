@@ -1,6 +1,6 @@
-# 3D Incompressible Fluid Simulation (CUDA + OpenGL)
+# 3D Incompressible Fluid Simulation
 
-A real-time 3D fluid simulator implementing the **incompressible Navier-Stokes equations** using CUDA for computation and OpenGL for visualization.
+A real-time 3D fluid simulator implementing the **Navier-Stokes equations** for  an **incompressible Newtonian fluid** using CUDA for computation and OpenGL for visualization. Made entirely by me during my research on CFD for a thesis course (PHY473) at the University of Toronto.
 
 ## Features
 
@@ -254,13 +254,3 @@ Possible improvements:
 - **Finite Volume Method**: Anderson, "Computational Fluid Dynamics"
 - **GPU Fluids**: Harris, "Fast Fluid Dynamics Simulation on the GPU"
 - **CUDA-GL Interop**: NVIDIA CUDA Programming Guide
-
-## License
-
-MIT License - feel free to use and modify!
-
-## Author
-
-Created for learning CUDA + CFD + Graphics programming.
-
-Enjoy the simulation! 🌊
