@@ -1,0 +1,415 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{soul}
+\usepackage{caption}
+\usepackage{multicol}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{geometry}
+\usepackage{calligra}
+\usepackage{mathpazo}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{arrows.meta}
+\usepackage{physics}
+\usepackage{changepage}
+\usepackage{microtype}
+\usepackage{nicefrac}
+\usepackage{forest}
+\usepackage{xcolor}
+\usepackage{ifthen}
+\usepackage{tocloft}
+\usepackage[super,comma,sort&compress]{natbib}
+
+% ==========================
+% ========== meta ==========
+
+\title{An Introduction to Classical \& Quantum CFD for Navier Stokes Equations}
+\author{Faisal Shaik}
+\date{November 24, 2025}
+
+% === link colors ===
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+}
+% ===
+
+% === table of contents ===
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}  % dots for sections
+\renewcommand{\cftsubsecleader}{\cftdotfill{\cftdotsep}}  % dots for subsections
+
+% ===
+
+% === commands ===
+\newcommand{\sh}[1]{\par\vspace{0.2cm}{\fontsize{10.5}{14}\selectfont\bfseries #1}\par}
+\newcommand{\mediumsize}{\fontsize{11}{13.2}\selectfont}
+\newcommand{\smallmediumsize}{\fontsize{10.5}{13.2}\selectfont}
+\newcommand{\cl}[1]{\overline{#1}}
+% ===
+
+% === par indentations ===
+\newenvironment{mypar}{%
+    \setlength{\parskip}{1em}%
+    \parindent=0pt%
+}{%
+    \par%
+}
+% ===
+
+% === section indentations ===
+\makeatletter
+\renewcommand\section{\@startsection {section}{1}{\z@}%
+    {-5ex \@plus -1ex \@minus -.2ex}% above
+    {1ex \@plus .2ex}% below
+{\normalfont\mediumsize\bfseries}}%
+
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+    {-5ex \@plus -1ex \@minus -.2ex}% above
+    {0.5ex \@plus .2ex}% below
+{\normalfont\smallmediumsize\bfseries}}%
+\makeatother
+% ===
+
+% === custom indentation ===
+\newenvironment{cindent}[1]{%
+    \par% start a new paragraph
+    \setlength{\leftskip}{#1}% set the left indentation
+    \noindent% no paragraph indentation
+    \ignorespaces% ignore spaces after \begin{customindent}
+}{%
+    \par% end the paragraph
+}
+% ===
+
+% === proof ===
+\renewenvironment{proof}[1][]{\noindent{\textit{Proof%
+    \if\relax\detokenize{#1}\relax\else\ \textnormal{#1}\fi.}}\\
+    \begin{cindent}{0.5cm}
+        \vspace{-0.6cm}
+
+    \vspace{-0.5cm}}
+{\end{cindent}\hfill$\square$}
+
+\newenvironment{subproof}[1][]{\noindent{\textit{subproof%
+    \if\relax\detokenize{#1}\relax\else\ \textnormal{#1}\fi.}}\\
+    \begin{cindent}{0.5cm}
+
+    \vspace{-0.5cm}}
+{\end{cindent}\hfill$\blacksquare$}
+% ===
+
+% === thm ===
+\newenvironment{thm}[2][\unskip]{%
+    \vspace{0.2cm}
+    \noindent{\textbf{#1} \ifthenelse{\equal{#2}{\unskip}}{}{#2}}% check if the second argument is provided
+    \begin{cindent}{0.5cm}
+        \vspace{-0.6cm}
+
+    \vspace{-0.5cm}}
+{\end{cindent}\hfill$\blacklozenge$}
+% ===
+
+% === tikz ===
+\tikzset{
+    every child/.style={
+        edge from parent/.style={draw, ->}
+    }
+}
+% ===
+
+% === figures ===
+\captionsetup{font=small}
+% ===
+
+% === other separation ===
+\setlist[itemize]{topsep=0.2em}
+% ===
+
+% === page margins ===
+\geometry{
+    top=0.8in,
+    bottom=0.8in,
+    left=0.8in,
+    right=0.8in
+}
+% ===
+
+% === cols ===
+\setlength{\columnsep}{30pt}
+% ===
+
+% ========== meta ==========
+% ==========================
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section*{Abstract}
+\addcontentsline{toc}{section}{Abstract}
+\vspace{-0.2cm}
+\begin{mypar}
+    The Navier-Stokes equations are the holy grail of computational fluid dynamics , governing everything from aerospace flight vehicle design , weather forecasting , plasma magneto-hydrodynamics , and astrophysics. The problem is that \textbf{these nonlinear partial differential equations are computationally intractable for classical computers} when dealing with cases such as turbulent flows at high Reynolds numbers , multi-scale phenomena from molecular to macroscopic scales , real-time applications like weather prediction or flight control. A quantum approach to computing flows of a Navier–Stokes fluid may prove to be less computationally intensive , providing the possibility for potential speedups when used in conjunction with classical methods. In this report , we investigate the Navier-Stokes equations , present classical computational algorithms implemented in CUDA , establish the fundamentals of quantum computing , and explore quantum algorithms with improved computational complexity.
+\end{mypar}
+
+\vspace{0.4cm}
+\hrule
+\vspace{0.2cm}
+
+\begin{multicols}{2}
+    \section{Introduction to Fluid Mechanics}
+
+    \begin{mypar}
+        To begin solving the Navier-Stokes equations , we must first understand what they are. It would be no understatement to call them the heart of fluid mechanics. They apply Newton's second law $(F=ma)$ to fluids by describing how the velocity field evolves over time. Given the velocity and pressure distribution throughout a fluid at one moment , plus boundary conditions , these equations predict how the flow will evolve.
+
+        The Navier-Stokes equations generally come in a pair of two. The \textit{momentum equation} , which essentially reads "$a = F / m$" , and the \textit{continuity equation} , which enforces that mass must be conserved. For the sake of simplicity , we first introduce these two equations for \textit{incompressible fluids}--fluids that cannot be shrunk down into a smaller volume under pressure.
+
+        We will first just state the equations and take a look at them before explaining them. The continuity equation (for incompressible fluids) reads as follows ,
+        \begin{equation}
+            \nabla \cdot \mathbf{u} = 0
+        \end{equation}
+
+        Where $\mathbf{u}$ is the velocity field of the flow at some point in space and time. Hence , $\nabla \cdot \mathbf{u}$ gives the divergence of $\mathbf{u}$ in space. Likewise , the momentum equation (for incompressible fluids) is ,
+
+        \begin{equation}
+            \frac{\partial \mathbf{u}}{\partial t} + (\mathbf{u} \cdot \nabla) \mathbf{u} = -\frac{1}{\rho}\nabla p + \frac{1}{\rho}\nabla \cdot \boldsymbol{\tau} + \mathbf{f}
+        \end{equation}
+
+        Where $t$ is time , $\rho$ is the constant fluid density , $p$ is the pressure field , $\boldsymbol{\tau}$ is the viscous stress tensor , and $\mathbf{f}$ represents body forces per unit mass (e.g. , gravity).
+
+        \vspace{-0.6cm}
+        \subsection{Deriving Navier-Stokes Equations}
+
+        Before any further discussion , we first clarify notation. Let $\mathbf{x}$ denote the spatial coordinates of the system. Typically the fluid lives in 3-dimensions , in which case $\mathbf{x}$ would be a free variable in $\mathbb{R}^3$. Then , whenever we use $\nabla$ with some function $F$ of space (and possibly more) , $\nabla F$ just denotes the Jacobian matrix $\frac{\partial F}{\partial \mathbf{x}}$. For example , $\nabla \mathbf{u}$ is nothing but the Jacobian matrix $\frac{\partial \mathbf{u}}{\partial \mathbf{x}}$. Moreover , every vector quantity as written in equations can be assumed to be a column vector. We denote the $i^{\text{th}}$ coordinate of some vector field or point $p$ as $p_i$. For example , in $\mathbb{R}^3$ we have
+        \[
+            \mathbf{x} = \begin{pmatrix} x_1 \\ x_2 \\ x_3 \end{pmatrix} \quad \text{and} \quad  \mathbf{u} = \begin{pmatrix} u_1 \\ u_2 \\ u_3 \end{pmatrix}
+        \]
+
+        and this gives us the Jacobian matrix ,
+        \[
+            \nabla \mathbf{u} = \begin{pmatrix}
+                \frac{\partial u_1}{\partial x_1} & \frac{\partial u_1}{\partial x_2} & \frac{\partial u_1}{\partial x_3} \\
+                \frac{\partial u_2}{\partial x_1} & \frac{\partial u_2}{\partial x_2} & \frac{\partial u_2}{\partial x_3} \\
+                \frac{\partial u_3}{\partial x_1} & \frac{\partial u_3}{\partial x_2} & \frac{\partial u_3}{\partial x_3}
+            \end{pmatrix}
+        \]
+
+        \vspace{-0.6cm}
+        \subsubsection{Continuity Equation}
+        \vspace{-0.2cm}
+
+        The divergence $\nabla \cdot \mathbf{u}$ measures how much the fluid "escapes" at a point in space. For example , in 3-dimensions this would be $\nabla \cdot \mathbf{u} = \frac{\partial u_1}{\partial x_1} + \frac{\partial u_2}{\partial x_2} + \frac{\partial u_3}{\partial x_3}$. If we have $\nabla \cdot \mathbf{u} > 0$ at some point, this would mean that more fluid is leaving that point then entering.
+
+        \begin{center}
+            \tdplotsetmaincoords{70}{110}
+            \begin{tikzpicture}[tdplot_main_coords, scale=1.0]
+
+                % draw axes
+                \draw[->] (0,0,0) -- (3,0,0) node[anchor=north east]{$x_1$};
+                \draw[->] (0,0,0) -- (0,3,0) node[anchor=north west]{$x_2$};
+                \draw[->] (0,0,0) -- (0,0,3) node[anchor=south]{$x_3$};
+
+                % outward arrows showing divergence (6 arrows)
+                \draw[-{Stealth[length=2mm, width=1.5mm]}, blue] (1.5,1.5,1.5) -- (2.8,1.5,1.5);
+                \draw[-{Stealth[length=2mm, width=1.5mm]}, blue] (1.5,1.5,1.5) -- (0.3,1.5,1.5);
+                \draw[-{Stealth[length=2mm, width=1.5mm]}, blue] (1.5,1.5,1.5) -- (1.5,2.2,1.5);
+                \draw[-{Stealth[length=2mm, width=1.5mm]}, blue] (1.5,1.5,1.5) -- (1.5,0.8,1.5);
+                \draw[-{Stealth[length=2mm, width=1.5mm]}, blue] (1.5,1.5,1.5) -- (1.5,1.5,2.2);
+                \draw[-{Stealth[length=2mm, width=1.5mm]}, blue] (1.5,1.5,1.5) -- (1.5,1.5,0.8);
+
+                % central point (drawn last so it's on top)
+                \fill[red] (1.5,1.5,1.5) circle (2.5pt);
+
+                % label
+                \node[blue, anchor=west] at (2.5,2.5,2.5) {$\mathbf{u}$};
+            \end{tikzpicture}
+            \captionof{figure}{Divergence at a point where $\nabla \cdot \mathbf{u} > 0$: fluid is leaving the point.}
+        \end{center}
+
+        Then either the fluid must be "expanding" in the volume it takes , or the point is a "source" where new fluid is being created. Incompressible fluid cannot shrink or expand , which means that $\nabla \cdot \mathbf{u} > 0$ must imply a source. But our system is a regular confined space , so we cannot have a source--that would mean we are making matter out of nothing.
+
+        Conversely , if $\nabla \cdot \mathbf{u} < 0$ , more fluid is entering than leaving , creating a "sink". Hence , for incompressible fluids , we require $\nabla \cdot \mathbf{u} = 0$ everywhere , meaning there are no sources or sinks.
+
+        \vspace{-0.6cm}
+        \subsubsection{Momentum Equation}
+        \vspace{-0.2cm}
+
+        We can show that the momentum equation (2) is just $a = F / m$ for fluids by first: mathematically deriving the left hand side (LHS) from acceleration $\frac{D \mathbf{u}}{Dt}$ , and second: making an empircal argument for the right hand side (RHS) being $F / m$.
+
+        Before proceeding , we must first introduce a new perspective of studying fluids. Up until now , we have been using the \textit{Eulerian perspective} , where $\mathbf{x}$ represents a fixed point in space and we observe how fluid properties (like velocity and pressure) change at that location over time. But what if we instead track an individual fluid element as it moves through space? How does the position of a specific point in our fluid evolve over time?
+
+        This alternative viewpoint is known as the \textit{Lagrangian perspective}. Here , we follow a single "particle" as it moves around in our fluid—though strictly speaking , we really mean an infinitesimal fluid element. The position of this fluid element becomes a function of time , $\mathbf{x}(t)$. In 3-dimensions , the position is a differentiable function $\mathbf{x}: \mathbb{R} \to \mathbb{R}^3$. This perspective allows us to track the velocity of an individual particle as it evolves through time via the function composition $\mathbf{u}(\mathbf{x}(t), t)$.
+
+        The key difference: in the Eulerian view , we ask "what is the velocity at this fixed location?" , while in the Lagrangian view , we ask "what is the velocity of this specific fluid element?"
+
+        Since velocity $\textbf{u} : \mathbb{R}^3 \times \mathbb{R} \to \mathbb{R}^3$ is a function of position $\mathbf{x}$ and time $t$ , and $\mathbf{x}$ itself is also a position of time , we get acceleration as
+        \begin{align*}
+            \frac{D \mathbf{u}}{Dt} &= \frac{\partial \mathbf{u}}{\partial t} + \frac{\partial \mathbf{u}}{\partial \mathbf{x}} \frac{d\mathbf{x}}{dt} \\
+                                    &=  \frac{\partial \mathbf{u}}{\partial t} + \left( \frac{\partial \mathbf{u}}{\partial \mathbf{x}} \right) \mathbf{u} \\
+        \end{align*}
+        The above is derived from an application of chain rule then rewriting $\frac{d\mathbf{x}}{dt}$ as velocity $\mathbf{u}$. By \textit{Lemma 1} (see \hyperref[sec:appendix]{Appendix A}) , we can write
+        \[
+            \frac{D \mathbf{u}}{Dt} = \frac{\partial \mathbf{u}}{\partial t} + \left( \mathbf{u} \cdot \frac{\partial}{\partial \mathbf{x}} \right) \mathbf{u} \\
+        \]
+
+        Here , $\left( \mathbf{u} \cdot \frac{\partial}{\partial \mathbf{x}} \right) = \left(u_1 \frac{\partial}{\partial x_1} + u_2 \frac{\partial}{\partial x_2} + u_3 \frac{\partial}{\partial x_3}\right)$ is a function operator. Using $\nabla$ notation , we finally yield
+        \begin{equation}
+            \frac{D \mathbf{u}}{Dt} = \frac{\partial \mathbf{u}}{\partial t} + \left( \mathbf{u} \cdot \nabla \right) \mathbf{u}
+        \end{equation}
+
+        This is exactly the LHS of equation (2). We now argue that the RHS of equation (2) is equal to $F / m$ , where $F$ is every force acting on the fluid at same point. There is no mathematical argument for showing this--it is purely empirical , based on experimentation and other empirically backed theories of physics.
+
+        We can split our argument to account for two kinds of accelerations the fluid experiences: acceleration from internal forces the fluid imparts on itself $a_{int}$ , and any acceleration imparted by external forces $a_{ext}$. Then it follows ,
+        \[
+            a = F / m = a_{ext} + a_{int}
+        \]
+
+        Note that the notion of external acceleration is entirely vague ! It depends on the context of the situation. There may be a gravitational field , centripetal acceleration , or something else that imparts acceleration on our fluid--we cannot characterize it further for the general case. For this reason , we just define $\mathbf{f} := a_{ext}$ as all the external force applied per unit mass of the fluid. For example , in many contexts , a system only concerns itself with gravitational acceleration , in which case we would just have $\mathbf{f} = g$.
+
+        A more interesting analysis arises when considering internal forces the fluid imparts on itself. Since the acceleration is only local to each point , we have $a_{int} = F_{int} / \rho$ , where $F_{int}$ measures the internal forces the fluid imparts on itself at a point in space and time. The internal force can be decomposed into two distinct mechanisms by which fluid elements interact with one another:
+        \[
+            F_{int} = F_p + F_{\tau}
+        \]
+        where $F_p$ represents pressure forces and $F_{\tau}$ represents viscous shear stress forces. These two forces arise from fundamentally different physical phenomena.
+
+        Pressure is a thermodynamic property that emerges from the statistical mechanics of molecular motion. At the microscopic level , a fluid consists of countless molecules in constant , random motion. These molecules continuously collide with one another and with any surfaces they encounter. Each individual collision imparts a tiny impulse , and when we average over the enormous number of collisions occurring per unit time , we observe a macroscopic force distributed over area--this is pressure. Crucially , pressure acts isotropically , meaning it pushes equally in all directions. If we imagine a small cubic fluid element , the pressure exerts forces perpendicular to each of its faces. When pressure varies spatially , a net force emerges. Consider a fluid element where pressure is higher on one side than the other--the element experiences a greater force from the high-pressure side , resulting in acceleration toward the low-pressure region. Mathematically , this net pressure force per unit volume is given by $-\nabla p$ (see \textit{Derivation 1} in \hyperref[sec:physderivations]{Appendix B}). The negative sign indicates that fluid accelerates from high pressure to low pressure , opposing the pressure gradient. Dividing by density $\rho$ to obtain force per unit mass , we have
+        \[
+            a_p = \frac{F_p}{\rho} = -\frac{1}{\rho}\nabla p
+        \]
+
+        This term appears in the momentum equation and captures how spatial variations in pressure drive fluid motion.
+
+        While pressure acts normal to surfaces , viscous stresses act tangentially , resisting the relative motion between adjacent fluid layers. Viscosity is an internal friction that arises from momentum transfer between molecules moving at different velocities. When neighboring fluid layers slide past each other , faster-moving molecules diffuse into slower-moving regions and vice versa , exchanging momentum and creating a drag force that opposes the velocity difference. The viscous stress is characterized by the stress tensor $\boldsymbol{\tau}$ , which encodes how forces are distributed across different orientations within the fluid. For a Newtonian fluid--one where stress is proportional to the rate of strain--the stress tensor depends on the velocity gradient $\nabla \mathbf{u}$. Specifically ,
+        \[
+            \boldsymbol{\tau} = \mu \left(\nabla \mathbf{u} + (\nabla \mathbf{u})^T\right) + \lambda (\nabla \cdot \mathbf{u})\mathbf{I}
+        \]
+        where $\mu$ is the dynamic viscosity , $\lambda$ is the second viscosity coefficient , and $\mathbf{I}$ is the identity matrix. The first term represents shear stresses , while the second accounts for bulk viscosity effects during compression or expansion. For incompressible fluids , $\nabla \cdot \mathbf{u} = 0$ by the continuity equation , so the bulk viscosity term vanishes. The net viscous force per unit volume on a fluid element is given by the divergence of the stress tensor , $\nabla \cdot \boldsymbol{\tau}$. This divergence measures how stress varies spatially , yielding a net force. Dividing by density , we obtain the viscous acceleration:
+        \[
+            a_{\tau} = \frac{F_{\tau}}{\rho} = \frac{1}{\rho}\nabla \cdot \boldsymbol{\tau}
+        \]
+
+        Combining both pressure and viscous contributions , the total internal acceleration is
+        \[
+            a_{int} = -\frac{1}{\rho}\nabla p + \frac{1}{\rho}\nabla \cdot \boldsymbol{\tau}
+        \]
+
+        Together with the external forces $\mathbf{f}$ and the material derivative we derived earlier , we arrive at the complete momentum equation (2).
+
+        \subsection{Why Do We Care ?}
+
+        \subsection{Solving Navier-Stokes Equations}
+
+        \subsection{Navier-Stokes for Compressible Fluids}
+
+        \subsection{Navier-Stokes for Newtonian \& Non-Newtonian Fluids}
+    \end{mypar}
+
+    \section{Classical Methods}
+    \begin{mypar}
+
+        \subsection{Introduction to Parallel Programming}
+
+        \subsection{Finite Volume Method}
+
+        \subsection{Spectral Methods}
+
+        \subsection{Lattice Boltzmann Method}
+
+    \end{mypar}
+
+    \section{Quantum Methods}
+    \begin{mypar}
+        \subsection{Introduction to Quantum Computing}
+        \subsection{Quantum Hardware}
+        \subsection{Turbulent Flows}
+        \subsubsection{Monte Carlo Approximation}
+        \subsubsection{Quantum Amplitude Estimation}
+        \subsection{Linear Systems from Implicit Time Discretization}
+        \subsubsection{Quantum Linear Solvers}
+        \subsubsection{Sub-QLS with Krylov Subspace Methods}
+    \end{mypar}
+\end{multicols}
+
+\newpage
+\appendix
+\section{Mathematical Proofs}
+\label{sec:appendix}
+\begin{mypar}
+    \begin{thm}[Lemma 1.]{}
+        Let $f: \mathbb{R}^m \times \mathbb{R}^k \to \mathbb{R}^m$. We can characterize the input of $f$ as $(x_1, \ldots, x_m, x_{m+1}, \ldots, x_{m+k})$. Let $x = (x_1, \ldots, x_m) \in \mathbb{R}^m$ denote the first $m$ components of the input. Then ,
+        \[
+            \left[ \left\langle f , \frac{\partial}{\partial x} \right\rangle \right] f = \left(\frac{\partial f}{\partial x}\right) f
+        \]
+        where $\langle \cdot , \cdot \rangle$ denotes the dot product , and $\frac{\partial f}{\partial x}$ is the Jacobian matrix with entries $\left(\frac{\partial f}{\partial x}\right)_{ij} = \frac{\partial f_i}{\partial x_j}$ for $i, j \in \{1, \ldots, m\}$.
+    \end{thm}
+
+    \begin{proof}
+        \begin{align*}
+            \left[ \left\langle f , \frac{\partial}{\partial x} \right\rangle \right] f &= \left[ f_1 \frac{\partial}{\partial x_1} + \ldots + f_m \frac{\partial}{\partial x_m} \right] \begin{pmatrix} f_1 \\ \vdots \\ f_m \end{pmatrix}  \\
+                                                                                        &= \begin{pmatrix}
+                                                                                            f_1 \frac{\partial f_1}{\partial x_1} + \ldots + f_m \frac{\partial f_1}{\partial x_m} \\
+                                                                                            \vdots \\
+                                                                                            f_1 \frac{\partial f_m}{\partial x_1} + \ldots + f_m \frac{\partial f_m}{\partial x_m}
+                                                                                        \end{pmatrix} \\
+                                                                                        &= \begin{pmatrix}
+                                                                                            \frac{\partial f_1}{\partial x_1} & \cdots & \frac{\partial f_1}{\partial x_m} \\
+                                                                                            \vdots & \ddots & \vdots \\
+                                                                                            \frac{\partial f_m}{\partial x_1} & \cdots & \frac{\partial f_m}{\partial x_m}
+                                                                                            \end{pmatrix} \begin{pmatrix} f_1 \\ \vdots \\ f_m \end{pmatrix} \\
+                                                                                                                                                                                                                                                                                          &= \left(\frac{\partial f}{\partial x}\right) f
+                                                                                        \end{align*}
+        \end{proof}
+    \end{mypar}
+
+
+    \section{Physical Derivations}
+    \label{sec:physderivations}
+    \begin{mypar}
+        \begin{thm}[Derivation 1.]{Pressure Force in a Fluid}
+            Consider a small rectangular fluid element with dimensions $\Delta x_1 \times \Delta x_2 \times \Delta x_3$ and volume $\Delta V = \Delta x_1 \Delta x_2 \Delta x_3$. We show that the net pressure force per unit volume acting on this element is given by $-\nabla p$.
+
+            Consider forces acting in the $x_1$ direction. The pressure at position $x_1$ exerts a force on the left face (with area $\Delta x_2 \Delta x_3$) pushing rightward with magnitude $p(x_1) \Delta x_2 \Delta x_3$. The pressure at position $x_1 + \Delta x_1$ exerts a force on the right face pushing leftward with magnitude $p(x_1 + \Delta x_1) \Delta x_2 \Delta x_3$. The net force in the $x_1$ direction is therefore
+            \[
+                F_1 = [p(x_1) - p(x_1 + \Delta x_1)] \Delta x_2 \Delta x_3
+            \]
+
+            Using a Taylor expansion , we have $p(x_1 + \Delta x_1) \approx p(x_1) + \frac{\partial p}{\partial x_1}\Delta x_1$. Substituting this yields
+            \[
+                F_1 \approx -\frac{\partial p}{\partial x_1} \Delta x_1 \Delta x_2 \Delta x_3 = -\frac{\partial p}{\partial x_1} \Delta V
+            \]
+
+            Dividing by the volume $\Delta V$ , we obtain the force per unit volume in the $x_1$ direction:
+            \[
+                \frac{F_1}{\Delta V} = -\frac{\partial p}{\partial x_1}
+            \]
+
+            Repeating this analysis for the $x_2$ and $x_3$ directions , we find
+            \[
+                \frac{F_2}{\Delta V} = -\frac{\partial p}{\partial x_2} \quad \text{and} \quad \frac{F_3}{\Delta V} = -\frac{\partial p}{\partial x_3}
+            \]
+
+            Combining all three components into a vector , the total pressure force per unit volume is
+            \[
+                \frac{\mathbf{F}_p}{\Delta V} = -\begin{pmatrix}
+                    \frac{\partial p}{\partial x_1} \\
+                    \frac{\partial p}{\partial x_2} \\
+                    \frac{\partial p}{\partial x_3}
+                \end{pmatrix} = -\nabla p
+            \]
+        \end{thm}
+    \end{mypar}
+
+    \newpage
+    \addcontentsline{toc}{section}{References}
+    \bibliographystyle{unsrt}
+    \bibliography{references}
+
+    \end{document}
