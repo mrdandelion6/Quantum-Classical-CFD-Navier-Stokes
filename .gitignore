@@ -1,5 +1,11 @@
+# tex
 .tex/
 .out/
 *.gz
 svg-inkscape/
 *.fuse*
+
+# cpp
+build/
+*.out
+*.exe
