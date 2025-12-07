@@ -12,7 +12,7 @@ a detailed summary of all my findings can be found in [`paper/paper.pdf`](paper/
 
 ## simulation code
 
-you can find all code written by me in [`code/`](code/). you can find fully classical algorithms in [`code/classical/`](code/classical/) and hybrid [`classical-quantum/`](classical-quantum/) algorithms in [`code/quantum/`](code/quantum/). you will find detailed instructions in the readme files on running the code for yourself.
+you can find all code written by me in [`code/`](code/). you can find fully classical algorithms in [`code/classical/`](code/classical/) and hybrid classical-quantum algorithms in [`code/quantum/`](code/quantum/). you will find detailed instructions in the readme files on running the code for yourself.
 
 ## references
 
